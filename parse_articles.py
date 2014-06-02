@@ -56,7 +56,7 @@ def parse_article(path):
 			# 	date += parse_date(line.rstrip(), path)
 				# ct+=1
 				# continue
-			if line[0].isnumeric() and len(line) < 20:
+			if line[0].isnumeric() and len(line) < 25:
 				date.append(parse_date(line.rstrip(), path))
 				ct+=1
 				continue
@@ -81,7 +81,7 @@ def parse_article(path):
 				text.append(line.rstrip())
 			ct+=1
 	if not title:
-		print(path)
+		print(path + ' has no title')
 	return([path, src.rstrip(), title.rstrip(), author.rstrip(), date, text])
 	# for row in r:
 	# 	subject = row[3].lower()
@@ -121,6 +121,18 @@ def parse_date(s,path):
 				return datetime.date(int(splitted[2]), int(month_to_num(splitted[1])), int(splitted[0]))
 			else:
 				print(path + ' unknown: ' + s)	
+		elif len(splitted) > 3:
+			# for x in range(0,3):
+			# 	if not splitted[x]:
+			# 		splitted.remove(x)
+			splitted.remove('')
+			# splitted.remove(' ')
+			if splitted[1][0].isalpha():
+				return datetime.date(int(splitted[2]), int(month_to_num(splitted[1])), int(splitted[0]))
+		elif len(splitted) == 2:
+			if splitted[0][2].isalpha() and splitted[0][1].isnumeric():
+				return datetime.date(int(splitted[1]), int(month_to_num(splitted[0][2:])), int(splitted[0][0:2]))
+		
 		else:
 			print(path + ' unknown: ' + s)
 
