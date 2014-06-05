@@ -53,19 +53,18 @@ def parse_xml(path):
 			# 	org = getValue(Word, 'word')
 			# 	if org not in organization:
 			# 		organization.append(org)
-	# info = [path, personName, organization, location]
-	# return str(info)
-	return str(personName)
+	info = [path, personName, organization, location]
+	return str(info)
 
 def main():
-	fout = open('ppl_in_articles.txt', 'w')
+	fout = open('PLO_articles.txt', 'w')
 
 	sources = {}
 	articles = []
 	
 	ct = 0
 	for filename in os.listdir('nlpxmloutput'):
-		pprint.pprint(str(ct) + parse_xml(ct), fout)
+		pprint.pprint(parse_xml(ct), fout)
 	# 	# articles.append(parse_article(filename))
 		ct+=1
 		# if ct == 50:
