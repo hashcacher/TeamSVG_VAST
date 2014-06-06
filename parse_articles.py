@@ -9,32 +9,57 @@ import string
 import operator
 import os
 import datetime
+import xlsxwriter
 
+class Person:
+	def __init__(self, name, first_date):
+		 self.n = name
+		 self.d = first_date
+	def __lt__(self, other):
+		return ((self.n.lower()) <
+				(other.n.lower()))
+	def __eq__(self, other):
+		return ((self.n.lower()) ==
+				(other.n.lower()))
+	def __str__(self):
+		return n + ' first seen on ' + d
 
 
 def main():
-	fout = open('parse_articles_output.txt', 'w')
+	fout = open('connections_output.txt', 'w')
 
 	sources = {}
 	articles = []
+	people = []
+	connections = []
+
 	
 	ct = 0
 	for filename in os.listdir('articles'):
 		# articles.append(parse_article(filename))
+		
 		ct+=1
-		# if ct == 50:
+		# if ct == 5:
 		# 	break
 		# print(filename)
-		pprint.pprint(parse_article(filename), fout)
-		pprint.pprint("", fout)
-		pprint.pprint('/'*100, fout)
-		pprint.pprint("", fout)
+		article = parse_article(filename)
+		people.extend(article[6])
+		connections.extend(article[7])
+
+
+	pprint.pprint(connections)
+	# pprint.pprint(people)
+	# pprint.pprint(parse_article(filename), fout)
+	# pprint.pprint("", fout)
+	# pprint.pprint('/'*100, fout)
+	# pprint.pprint("", fout)
+
+	# make_xlsx(articles)
+	# print(len(articles))
 
 def parse_article(path):
 	f = open('articles/'+path, 'r')
 	# lines = f.readlines()
-	
-
 
 	garbage_words = ['re:', 'vacation', 'funny', 'cute', 'cute!', 'babysitting', 'watch found', 'guys night out', 'ha ha', 'casino', 'flowers', 'text and drive', 'craft night', 'coupon club',
 	 'funy', 'borrow hedge trimmer', 'home sick', 'coffee', 'employee of the month', 'picnic', 'lottery', 'holiday', 'retirement', 'birthday', 'good morning', 'cover for me',
@@ -48,14 +73,14 @@ def parse_article(path):
 	author = ''
 	text = []
 
+	names = ['beatriz', 'sanjorge', 'president']
+	names_found = []
+	connections = []
+	people = []
+
 	ct = 0
 	for line in f:
 		if line.rstrip():
-			# print(line, ct)
-			# if ct < 3 and 'of' in line.rstrip():
-			# 	date += parse_date(line.rstrip(), path)
-				# ct+=1
-				# continue
 			if line[0].isnumeric() and len(line) < 25:
 				date.append(parse_date(line.rstrip(), path))
 				ct+=1
@@ -70,39 +95,32 @@ def parse_article(path):
 			elif ct == 2:
 				if line[0].isalpha() and len(line) < 25:
 					author = line
-				# else:
-				# 	text.append(line.rstrip())
-			# elif ct == 3:
-				# if author != '':
-				# 	date += parse_date(line.rstrip(),path)
-				# else:
-				# text.append(line.rstrip())
 			else:
 				text.append(line.rstrip())
+							#finding names:
+				for s in names:
+					# print(s + ' ' + line)
+					if s in line.lower():
+						found = False
+						for n in names_found:
+							if s in n:
+								found = True
+								break
+						if found == True:
+							break
+						# print(s)
+						#                  name line found in
+						names_found.append([s,    ct])
+						people.append(Person(s, 5))
+						for other in names_found:		#closeness in lines
+							if other[0] != s:
+								connections.append([s, other[0], abs(ct - other[1]), src.rstrip(), path])
 			ct+=1
 	if not title:
 		print(path + ' has no title')
-	return([path, src.rstrip(), title.rstrip(), author.rstrip(), date, text])
-	# for row in r:
-	# 	subject = row[3].lower()
-		
-	# 	cont = False
-	# 	for word in garbage_words:
-	# 		if word in subject:
-	# 			cont = True
-	# 			break
 
-	# 	if cont:
-	# 		continue
 
-	# 	from_person = row[0]
-	# 	to_people = row[1].split(',') 
-	# 	#now by subject
-	# 	if subject not in keywords:
-	# 		keywords[subject] = [len(to_people), 'From: ' + row[0], 'To: ' + row[1], row[2]]
-
-	# ordered = OrderedDict(sorted(keywords.items(), key=lambda t: t[1][0]))
-	# pprint.pprint(ordered, fout)
+	return([path, src.rstrip(), title.rstrip(), author.rstrip(), date, text, people, connections])
 
 def parse_date(s,path):
 	try:
@@ -142,29 +160,79 @@ def parse_date(s,path):
 
 def month_to_num(month):
 	return{
-	        'Jan' : 1,
-	        'January' : 1,
-	        'Feb' : 2,
-	        'February' : 2,
-	        'Mar' : 3,
-	        'March' : 3,
-	        'Apr' : 4,
-	        'April' : 4,
-	        'May' : 5,
-	        'Jun' : 6,
-	        'June' : 6,
-	        'Jul' : 7,
-	        'July' : 7,
-	        'Aug' : 8,
-	        'August' : 8,
-	        'Sep' : 9, 
-	        'September' : 9, 
-	        'Oct' : 10,
-	        'October' : 10,
-	        'Nov' : 11,
-	        'November' : 11,
-	        'Dec' : 12,
-	        'December' : 12
+			'Jan' : 1,
+			'January' : 1,
+			'Feb' : 2,
+			'February' : 2,
+			'Mar' : 3,
+			'March' : 3,
+			'Apr' : 4,
+			'April' : 4,
+			'May' : 5,
+			'Jun' : 6,
+			'June' : 6,
+			'Jul' : 7,
+			'July' : 7,
+			'Aug' : 8,
+			'August' : 8,
+			'Sep' : 9, 
+			'September' : 9, 
+			'Oct' : 10,
+			'October' : 10,
+			'Nov' : 11,
+			'November' : 11,
+			'Dec' : 12,
+			'December' : 12
 	}[month]
+
+
+def make_xlsx(articles):
+	
+	# Create an new Excel file and add a worksheet.
+	workbook = xlsxwriter.Workbook('vast timeline.xlsx')
+	worksheet = workbook.add_worksheet()
+
+	# Widen the first column to make the text clearer.
+	worksheet.set_column('A:A', 20)
+	worksheet.set_column('F:F', 12)
+	worksheet.set_column('G:G', 16)
+	worksheet.set_column('H:H', 16)
+
+	# Add a bold format to use to highlight cells.
+	bold = workbook.add_format({'bold': True})
+	dateformat = workbook.add_format({'num_format': 'mm/dd/yyyy h:mm:ss'})
+	
+
+	#Headers
+	worksheet.write('A1', 'Start Date', bold)
+	worksheet.write('B1', 'End Date', bold)
+	worksheet.write('C1', 'Headline', bold)
+	worksheet.write('D1', 'Text', bold)
+	worksheet.write('E1', 'Media', bold)
+	worksheet.write('F1', 'Media Credit', bold)
+	worksheet.write('G1', 'Media Caption', bold)
+	worksheet.write('H1', 'Media Thumbnail', bold)
+	worksheet.write('I1', 'Type', bold)
+	worksheet.write('J1', 'Tag', bold)
+
+	# for article in arcticles
+	# Write some numbers, with row/column notation.
+	row = 1
+	for article in articles:#lets write 
+		worksheet.write_datetime(row, 0, article[4][0], dateformat) #date
+		# worksheet.write(row, 0, number, format5)       # 28/02/13 12:00
+		worksheet.write(row, 2, article[2]) #Headline
+		worksheet.write(row, 4, "\n\n".join(article[5][0:2])) #text
+		worksheet.write(row, 6, article[3]) #author?
+		worksheet.write(row, 6, article[1]) #source?
+		row += 1
+		# if row == 10:
+		# 	break
+		
+
+	#[path, src.rstrip(), title.rstrip(), author.rstrip(), date, text]
+
+	workbook.close()
+
 
 main()
