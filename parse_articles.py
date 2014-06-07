@@ -1,4 +1,4 @@
-#Unbuffered CSV parser
+#Parses the articles in mini project 1
 
 import csv
 import sys
@@ -11,26 +11,28 @@ import os
 import datetime
 import xlsxwriter
 
+
 class Person:
 	def __init__(self, name, first_date):
 		 self.n = name
 		 self.d = first_date
 	def __lt__(self, other):
-		return ((self.n.lower()) <
-				(other.n.lower()))
+		return ((self.d) <
+				(other.d))
 	def __eq__(self, other):
 		return ((self.n.lower()) ==
 				(other.n.lower()))
 	def __str__(self):
 		return n + ' first seen on ' + d
+	def __hash__(self):
+		return hash(self.n)
 
 
 def main():
 	fout = open('connections_output.txt', 'w')
 
-	sources = {}
 	articles = []
-	people = []
+	people = set()
 	connections = []
 
 	
@@ -41,14 +43,25 @@ def main():
 		ct+=1
 		# if ct == 5:
 		# 	break
-		# print(filename)
+		
 		article = parse_article(filename)
-		people.extend(article[6])
+		for person1 in article[6]:
+			found = False
+			for person2 in people:
+				if person1 == person2:
+					if person1 < person2:
+						people.remove(person2)
+						people.add(person1)
+			if not found:
+				people.add(person1)
+
+
 		connections.extend(article[7])
 
-
 	pprint.pprint(connections)
-	# pprint.pprint(people)
+	for person in people:
+		pprint.pprint(person.n + ' ' + str(person.d))
+
 	# pprint.pprint(parse_article(filename), fout)
 	# pprint.pprint("", fout)
 	# pprint.pprint('/'*100, fout)
@@ -61,6 +74,7 @@ def parse_article(path):
 	f = open('articles/'+path, 'r')
 	# lines = f.readlines()
 
+	#not used
 	garbage_words = ['re:', 'vacation', 'funny', 'cute', 'cute!', 'babysitting', 'watch found', 'guys night out', 'ha ha', 'casino', 'flowers', 'text and drive', 'craft night', 'coupon club',
 	 'funy', 'borrow hedge trimmer', 'home sick', 'coffee', 'employee of the month', 'picnic', 'lottery', 'holiday', 'retirement', 'birthday', 'good morning', 'cover for me',
 	 'concert', 'testing 1 2 3', 'on my way', 'new gyro place', 'karoake', 'copier', 'out of staples', 'lunch', 'missing sweater']
@@ -73,7 +87,7 @@ def parse_article(path):
 	author = ''
 	text = []
 
-	names = ['beatriz', 'sanjorge', 'president']
+	names = ['beatriz', 'sanjorge', 'pok']
 	names_found = []
 	connections = []
 	people = []
@@ -82,7 +96,10 @@ def parse_article(path):
 	for line in f:
 		if line.rstrip():
 			if line[0].isnumeric() and len(line) < 25:
-				date.append(parse_date(line.rstrip(), path))
+				if date:
+					date = min(date,parse_date(line.rstrip(), path))
+				else:
+					date = parse_date(line.rstrip(), path)
 				ct+=1
 				continue
 			if ct == 0:
@@ -98,7 +115,7 @@ def parse_article(path):
 			else:
 				text.append(line.rstrip())
 							#finding names:
-				for s in names:
+				for s in names: 
 					# print(s + ' ' + line)
 					if s in line.lower():
 						found = False
@@ -111,10 +128,10 @@ def parse_article(path):
 						# print(s)
 						#                  name line found in
 						names_found.append([s,    ct])
-						people.append(Person(s, 5))
-						for other in names_found:		#closeness in lines
-							if other[0] != s:
-								connections.append([s, other[0], abs(ct - other[1]), src.rstrip(), path])
+						people.append(Person(s, date))
+						for other in names_found:		
+							if other[0] != s:							#closeness in lines
+								connections.append([s, other[0], date, abs(ct - other[1]), src.rstrip(), path])
 			ct+=1
 	if not title:
 		print(path + ' has no title')
@@ -124,7 +141,6 @@ def parse_article(path):
 
 def parse_date(s,path):
 	try:
-			
 		splitted = s.split('/')
 		if len(splitted) == 3:
 			return datetime.date(int(splitted[0]), int(splitted[1]), int(splitted[2]))
