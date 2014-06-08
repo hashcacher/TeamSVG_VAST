@@ -73,7 +73,7 @@ def parse_article(path):
 	author = ''
 	text = []
 
-	names = ['beatriz', 'sanjorge', 'president']
+	names = ['beatriz', 'sanjorge']
 	names_found = []
 	connections = []
 	people = []
